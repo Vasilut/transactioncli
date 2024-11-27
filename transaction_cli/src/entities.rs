@@ -8,7 +8,7 @@ pub struct Transaction {
     pub amount: f64,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct ClientAccount {
     pub client: u16,
     pub available_amount: f64,

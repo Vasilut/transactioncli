@@ -1,8 +1,8 @@
-use std::{env, error::Error};
+use std::{env, error::Error, io};
 
 pub mod entities;
 pub mod service;
-use entities::{Transaction, ClientAccount};
+use entities::Transaction;
 use service::PaymentEngine;
 
 fn main() -> Result<(), Box<dyn Error>>{
@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn Error>>{
     let args : Vec<String> = env::args().collect();
 
     if args.len() != 2 {
-        eprintln!("Usage: cargo run -- <transactions.csv>");
+        eprintln!("We need to pass only one parameter, this is how we need to use it: cargo run -- <transactions.csv>");
         return Err("Invalid number of arguments".into());
     }
 
@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn Error>>{
     for records in file_reader.deserialize::<Transaction>() {
         match records {
             Ok(current_transaction) => {
-                println!("{:?}", current_transaction);
+                payment_engine.process_transaction(current_transaction);
             }
             Err(e) => {
                 eprintln!("Error processing record: {}", e);
@@ -30,6 +30,15 @@ fn main() -> Result<(), Box<dyn Error>>{
             }
         }
     }
+
+    let accounts = payment_engine.get_accounts();
+
+    let mut csv_writer = csv::Writer::from_writer(io::stdout());
+    for account in accounts {
+        csv_writer.serialize(account)?;
+    }
+    
+    csv_writer.flush()?;
 
     Ok(())
 }
