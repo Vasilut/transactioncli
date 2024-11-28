@@ -31,7 +31,7 @@ fn main() -> Result<(), Box<dyn Error>>{
         }
     }
 
-    let accounts = payment_engine.get_accounts();
+    let accounts = payment_engine.get_client_accounts();
 
     let mut csv_writer = csv::Writer::from_writer(io::stdout());
     for account in accounts {
