@@ -1,6 +1,6 @@
 ### Transaction CLI
 
-A transaction CLI which can support different operation like Deposit, Withdrawal, etc.
+A transaction CLI which can support different operation like Deposit, Withdrawal, Dispute, Resolve, Chargeback, etc.
 
 This is a cargo rust project.
 
