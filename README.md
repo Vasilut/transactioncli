@@ -34,11 +34,11 @@ withdrawal,2,5,0.27
 Output file: (accounts.csv)
 
 ```
-
-To run the tests:
-
-```cargo test```
 client,available_amount,held_amount,total_amount,locked
 1,1.5,0.0,1.5,false
 2,1.73,0.0,1.73,false
 ```
+
+To run the tests:
+
+```cargo test```
