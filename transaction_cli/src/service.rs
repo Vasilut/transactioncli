@@ -65,51 +65,55 @@ impl PaymentEngine {
     
     fn dispute(&mut self, transaction_id : u32, client_id : u16) {
 
-        if let Some(transaction) = self.transactions.get(&transaction_id) {
-            let (transaction_client_id, amount, _) = (transaction.0, transaction.1, transaction.2);
-
-            if transaction_client_id == client_id {
+        if let Some((transaction_client_id, amount, is_disputed)) = self.transactions.get_mut(&transaction_id) {
+        
+            if *transaction_client_id == client_id && !*is_disputed {
                 if let Some(account) = self.accounts.get_mut(&client_id) {
-                    account.available_amount -= amount;
-                    account.held_amount += amount;
+                    account.available_amount -= *amount;
+                    account.held_amount += *amount;
+
+                    //we need to mark the transaction as disputed, so we don't disputed again in the future
+                    *is_disputed = true;
                 }
+            } else if *is_disputed {
+                eprintln!("Transaction {} is already disputed.", transaction_id);
             }
         }
     }
 
     fn resolve(&mut self, transaction_id : u32, client_id : u16) {
 
-        if let Some(transaction) = self.transactions.get(&transaction_id) {
+        if let Some((transaction_client_id, amount, is_disputed)) = self.transactions.get_mut(&transaction_id) {
 
-            let (transaction_client_id, amount, _) = (transaction.0, transaction.1, transaction.2);
-
-            if transaction_client_id == client_id {
+            if *transaction_client_id == client_id && *is_disputed {
                 if let Some(account) = self.accounts.get_mut(&client_id) {
-                    account.available_amount += amount;
-                    account.held_amount -= amount;
+                    account.available_amount += *amount;
+                    account.held_amount -= *amount;
 
                     //we resolved the transaction, so we can remove it from the map, since another future transaction cannot operate on a solved transaction
                     self.transactions.remove(&transaction_id);
                 }
+            } else if !*is_disputed {
+                eprintln!("Transaction {} is not disputed, so we cannot solve it", transaction_id);
             }
         }
     }
 
     fn chargeback(&mut self, transaction_id : u32, client_id : u16) {
 
-        if let Some(transaction) = self.transactions.get(&transaction_id) {
+        if let Some((transaction_client_id, amount, is_disputed)) = self.transactions.get_mut(&transaction_id) {
 
-            let (transaction_client_id, amount, _) = (transaction.0, transaction.1, transaction.2);
-
-            if transaction_client_id == client_id {
+            if *transaction_client_id == client_id && *is_disputed {
                 if let Some(account) = self.accounts.get_mut(&client_id) {
-                    account.total_amount -= amount;
-                    account.held_amount -= amount;
+                    account.total_amount -= *amount;
+                    account.held_amount -= *amount;
                     account.locked = true;
 
                     //after chargeback, we remove the transaction, since no future transaction can operate on this transaction anymore
                     self.transactions.remove(&transaction_id);
                 }
+            } else if !*is_disputed {
+                eprintln!("Transaction {} is not disputed, so we cannot chargeback it", transaction_id);
             }
         }
     }
